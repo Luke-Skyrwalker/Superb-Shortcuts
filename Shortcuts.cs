@@ -43,7 +43,7 @@ namespace Superb_Shortcuts
             {
                 using (Process myProcess = new Process())
                 {
-                    myProcess.StartInfo.UseShellExecute = false; // ToDo: Needed?
+                    myProcess.StartInfo.UseShellExecute = true;
                     myProcess.StartInfo.FileName = ap;
                     myProcess.Start();
                 }
@@ -56,9 +56,10 @@ namespace Superb_Shortcuts
 
             if (e.Button == MouseButtons.Right)
             {
-                if (ApplicationDialog.ShowDialog() == DialogResult.OK && PictureDialog.ShowDialog() == DialogResult.OK)
+                if (ApplicationDialog.ShowDialog() == DialogResult.OK)
                 {
-                    UpdatePb(pb, PictureDialog.FileName, ApplicationDialog.FileName);
+                    if (PictureDialog.ShowDialog() == DialogResult.OK) ProcessAppFile(pb, ApplicationDialog.FileName, PictureDialog.FileName);
+                    else ProcessAppFile(pb, ApplicationDialog.FileName);
                 }
             }
         }
@@ -89,7 +90,7 @@ namespace Superb_Shortcuts
                     dropType = ext switch
                     {
                         ".jpg" or ".jpeg" or ".png" or ".bmp" => DropType.Picture,
-                        ".lnk" or ".exe" => DropType.App, // or ".url"
+                        ".lnk" or ".exe" or ".url" => DropType.App,
                         _ => DropType.Invalid
                     };
                     if (dropType != DropType.Invalid) e.Effect = DragDropEffects.Copy;
@@ -123,6 +124,7 @@ namespace Superb_Shortcuts
 
         private void SwitchPbs(PictureBox pb1, PictureBox pb2)
         {
+            if (pb1.Equals(pb2)) return;
             paths.SwitchTiles(pb1.Name, pb2.Name);
             appPaths = paths.LoadAppPaths();
             ReloadImage(pb1);
@@ -148,7 +150,7 @@ namespace Superb_Shortcuts
         }
 
 
-        private void ProcessAppFile(PictureBox pb, string appPath)
+        private void ProcessAppFile(PictureBox pb, string appPath, string? picturePath = null)
         {
             try
             {
@@ -156,12 +158,27 @@ namespace Superb_Shortcuts
                 {
                     ".exe" => appPath,
                     ".lnk" => GetTargetPath(appPath),
-                    //".url" => GetUrl(appPath)
+                    ".url" => GetUrl(appPath)
                 };
 
-                Icon? icon = Icon.ExtractAssociatedIcon(appPath);
-                if (icon == null) icon = Icon.ExtractAssociatedIcon(targetPath);
-                if (icon != null) UpdatePb(pb, icon.ToBitmap(), targetPath);
+                if (targetPath == "")
+                {
+                    MessageBox.Show(
+                        "This file isn't compatible",
+                        "Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    return;
+                }
+
+                if (picturePath == null)
+                {
+                    Icon? icon = Icon.ExtractAssociatedIcon(appPath);
+                    if (icon == null) icon = Icon.ExtractAssociatedIcon(targetPath);
+                    if (icon != null) UpdatePb(pb, icon.ToBitmap(), targetPath);
+                }
+                else UpdatePb(pb, picturePath, targetPath);
             }
             catch (Exception ex)
             {
@@ -181,5 +198,19 @@ namespace Superb_Shortcuts
             return shortcut.TargetPath;
         }
 
+        private string GetUrl(string urlPath)
+        {
+            var lines = System.IO.File.ReadAllLines(urlPath);
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("URL"))
+                {
+                    return line.Substring(4).Trim();
+                }
+            }
+
+            return null; // ToDo: Is this case possible? Maybe work with returning bool / out argument
+        }
     }
 }

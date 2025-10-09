@@ -41,7 +41,7 @@ namespace Superb_Shortcuts
             // 
             // ApplicationDialog
             // 
-            ApplicationDialog.Filter = "Executables (*.exe)|*.exe";
+            ApplicationDialog.Filter = "Applications | *.exe; *.lnk; *.url";
             ApplicationDialog.Title = "Choose Application";
             // 
             // Shortcuts

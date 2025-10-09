@@ -1,5 +1,3 @@
-- add support for .url files (steam games for ex.) -> just need to open the url
-- merge some drag/drop functions and maybe create extra class for functions
 - add controller support
 - control SoundSwitch via CLI -> Check SoundSwitch C# project (adding new overlay for sound/display switch?)
 - tutorial at first start
