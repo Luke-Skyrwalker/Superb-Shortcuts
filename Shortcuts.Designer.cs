@@ -36,7 +36,7 @@ namespace Superb_Shortcuts
             // 
             // PictureDialog
             // 
-            PictureDialog.Filter = "Bilder| *.png; *.jpg; *.jpeg";
+            PictureDialog.Filter = "Bilder| *.png; *.jpg; *.jpeg; *.bmp";
             PictureDialog.Title = "Choose Picture";
             // 
             // ApplicationDialog
@@ -78,7 +78,6 @@ namespace Superb_Shortcuts
         private void InitializePictureBoxes(Paths paths)
         {
             SuspendLayout();
-            var tilePaths = paths.LoadTilePaths();
             tiles = new PictureBox[] { A0, A1, A2, A3, A4, A5, A6, A7, A8 };
             positions = InitializePositions();
             for (int i = 0; i < tiles.Length; i++)
@@ -93,9 +92,7 @@ namespace Superb_Shortcuts
                 pb.Size = new Size(713, 370);
                 pb.SizeMode = PictureBoxSizeMode.Zoom;
                 pb.Name = "A" + i.ToString();
-                TilePaths? tp;
-                if (tilePaths.TryGetValue(pb.Name, out tp)) pb.Image = Image.FromFile(tp.PicturePath);
-                else pb.Image = Image.FromFile(paths.GetBasicPicPath());
+                pb.Image = paths.LoadPicture(pb.Name);
                 // pb.TabIndex = ... -> TabStop = true; (Default Wert)
                 pb.TabStop = false;
                 pb.AllowDrop = true;

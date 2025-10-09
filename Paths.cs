@@ -1,16 +1,13 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
+using System.Text.Json;
+using System.Xml.Linq;
 
 
 public class Paths
 {
-    public class TilePaths // ToDo: Besserer Name
-    {
-        // public string PictureBoxName { get; set; }
-        public string PicturePath { get; set; }
-        public string ApplicationPath { get; set; }
-    }
 
     private readonly string configDirectory;
     private readonly string configFilePath;
@@ -20,46 +17,28 @@ public class Paths
         string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         configDirectory = Path.Combine(documentsPath, "SuperbShortcuts");
         configFilePath = Path.Combine(configDirectory, "paths.json");
-        EnsureDirectoryExists();
+        if (!Directory.Exists(configDirectory)) Directory.CreateDirectory(configDirectory);
         ExtractBasicPic();
     }
 
-    private void EnsureDirectoryExists()
+    public Dictionary<String, String> LoadAppPaths()
     {
-        if (!Directory.Exists(configDirectory))
-        {
-            Directory.CreateDirectory(configDirectory);
-        }
-    }
-
-    private void EnsureFileExists()
-    {
-        if (!File.Exists(configFilePath))
-        {
-            SaveTilePaths(new Dictionary<String, TilePaths>());
-        }
-    }
-
-    // ToDo: Rückgabe Dict PbName -> AppEntry? So auch in Json darstellen?
-    // Dictionary<PictureBox, AppEntry> ...
-    public Dictionary<String, TilePaths> LoadTilePaths()
-    {
-        EnsureFileExists();
+        if (!File.Exists(configFilePath)) SaveAppPaths(new Dictionary<String, String>());
 
         try
         {
             string jsonContent = File.ReadAllText(configFilePath);
-            var tps = JsonSerializer.Deserialize<Dictionary<String, TilePaths>>(jsonContent);
-            return tps ?? new Dictionary<String, TilePaths>();
+            var tps = JsonSerializer.Deserialize<Dictionary<String, String>>(jsonContent);
+            return tps ?? new Dictionary<String, String>();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Fehler beim Laden: {ex.Message}");
-            return new Dictionary<String, TilePaths>();
+            return new Dictionary<String, String>();
         }
     }
 
-    public void SaveTilePaths(Dictionary<String, TilePaths> tps)
+    public void SaveAppPaths(Dictionary<String, String> tps)
     {
         try
         {
@@ -76,51 +55,60 @@ public class Paths
         }
     }
 
-    public void AddOrUpdateTilePath(string pbName, string picturePath, string applicationPath)
+    // ToDo: Better name
+    public void AddOrUpdateTile(string pbName, Bitmap pic, string applicationPath)
     {
-        var tps = LoadTilePaths();
-        TilePaths tp = new TilePaths
-        {
-            PicturePath = picturePath,
-            ApplicationPath = applicationPath
-        };
+        SavePicture(pbName, pic);
+        // Add/Update path in json file
+        var tps = LoadAppPaths();
         if (tps.ContainsKey(pbName))
-            tps[pbName] = tp;
-        else tps.Add(pbName, tp);
-        SaveTilePaths(tps);
+            tps[pbName] = applicationPath;
+        else tps.Add(pbName, applicationPath);
+        SaveAppPaths(tps);
     }
 
-    public void UpdatePicturePath(string pbName, string picturePath)
+    public void SavePicture(string name, Bitmap pic)
     {
-        var tps = LoadTilePaths();
-        TilePaths? tp;
-        if (tps.TryGetValue(pbName, out tp))
+        // Save picture to config Folder
+        string picPath = GetPicPath(name);
+        pic.Save(picPath, ImageFormat.Bmp);
+        pic.Dispose();
+    }
+
+    public Image LoadPicture(string name)
+    {
+        string picPath = GetPicPath(name);
+        if (!File.Exists(picPath)) picPath = GetPicPath("BasicPic");
+        using (FileStream fs = new FileStream(picPath, FileMode.Open))
         {
-            tp.PicturePath = picturePath;
-            SaveTilePaths(tps);
+            return Image.FromStream(fs);
         }
     }
 
-    public void SwitchPbs(string pb1Name, string pb2Name)
+    public void SwitchTiles(string pb1Name, string pb2Name)
     {
-        var tps = LoadTilePaths();
+        var tps = LoadAppPaths();
         if (!(tps.ContainsKey(pb1Name) && tps.ContainsKey(pb1Name))) return;
-        TilePaths tp1 = tps[pb1Name];
+        // switch application path
+        string tp1 = tps[pb1Name];
         tps[pb1Name] = tps[pb2Name];
         tps[pb2Name] = tp1;
-        SaveTilePaths(tps);
-
+        SaveAppPaths(tps);
+        // switch pictures
+        File.Move(GetPicPath(pb1Name), GetPicPath("temp"));
+        File.Move(GetPicPath(pb2Name), GetPicPath(pb1Name));
+        File.Move(GetPicPath("temp"), GetPicPath(pb2Name));
     }
 
-    public string GetBasicPicPath()
+    private string GetPicPath(string name)
     {
-        return configDirectory + "\\BasicPic.png";
+        return Path.Combine(configDirectory, name + ".bmp");
     }
 
-    public void ExtractBasicPic()
+    private void ExtractBasicPic()
     {
-        string resourceName = "BasicPic.png";
-        string targetPath = Path.Combine(configDirectory, resourceName);
+        string resourceName = "BasicPic.bmp";
+        string targetPath = GetPicPath("BasicPic");
 
         if (File.Exists(targetPath))
         {

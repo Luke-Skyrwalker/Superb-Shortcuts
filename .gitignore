@@ -43,6 +43,8 @@ CodeCoverage/
 .vs/
 *.sln
 *.csproj*
+*temp*
+*Temp*
 
 # MSBuild Binary and Structured Log
 *.binlog

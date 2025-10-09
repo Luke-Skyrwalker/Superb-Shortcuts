@@ -6,22 +6,31 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Superb_Shortcuts
 {
     public partial class Shortcuts : Form
     {
-        protected bool validData;
-        string path;
+        enum DropType
+        {
+            PictureBox,
+            Picture,
+            App,
+            Invalid
+        }
+
+        DropType dropType = DropType.Invalid;
+        string dropFilepath;
 
         Paths paths;
-        Dictionary<String, Paths.TilePaths> tilePaths;
+        Dictionary<String, String> appPaths;
 
 
         public Shortcuts()
         {
             paths = new Paths();
-            tilePaths = paths.LoadTilePaths();
+            appPaths = paths.LoadAppPaths();
             InitializeComponents(paths);
         }
 
@@ -29,13 +38,13 @@ namespace Superb_Shortcuts
         {
             PictureBox pb = sender as PictureBox;
 
-            Paths.TilePaths? tp;
-            if (tilePaths.TryGetValue(pb.Name, out tp))
+            string? ap;
+            if (appPaths.TryGetValue(pb.Name, out ap))
             {
                 using (Process myProcess = new Process())
                 {
                     myProcess.StartInfo.UseShellExecute = false; // ToDo: Needed?
-                    myProcess.StartInfo.FileName = tp.ApplicationPath;
+                    myProcess.StartInfo.FileName = ap;
                     myProcess.Start();
                 }
             }
@@ -65,71 +74,111 @@ namespace Superb_Shortcuts
 
         private void Pb_DragEnter(object sender, DragEventArgs e)
         {
-            string filename;
-            validData = GetFilename(out filename, e);
-            if (validData)
+            if (e.Data.GetDataPresent(typeof(PictureBox)))
             {
-                path = filename;
+                dropType = DropType.PictureBox;
                 e.Effect = DragDropEffects.Copy;
             }
-            else if (e.Data.GetDataPresent(typeof(PictureBox))) e.Effect = DragDropEffects.Copy;
-            else e.Effect = DragDropEffects.None;
+            else if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length == 1)
+                {
+                    dropFilepath = files[0];
+                    string ext = Path.GetExtension(files[0]).ToLower();
+                    dropType = ext switch
+                    {
+                        ".jpg" or ".jpeg" or ".png" or ".bmp" => DropType.Picture,
+                        ".lnk" or ".exe" => DropType.App, // or ".url"
+                        _ => DropType.Invalid
+                    };
+                    if (dropType != DropType.Invalid) e.Effect = DragDropEffects.Copy;
+                }
+            }
+            else
+            {
+                dropType = DropType.Invalid;
+                e.Effect = DragDropEffects.None;
+            }
         }
 
         private void Pb_DragDrop(object sender, DragEventArgs e)
         {
             PictureBox pb = sender as PictureBox;
-            if (validData) UpdatePb(pb, path);
-            else if (e.Data.GetDataPresent(typeof(PictureBox))) SwitchPbs(pb, e.Data.GetData(typeof(PictureBox)) as PictureBox);
+            switch (dropType) 
+            {
+                case DropType.PictureBox:
+                    SwitchPbs(pb, e.Data.GetData(typeof(PictureBox)) as PictureBox);
+                    break;
+                case DropType.Picture:
+                    UpdatePb(pb, dropFilepath);
+                    break;
+                case DropType.App:
+                    ProcessAppFile(pb, dropFilepath);
+                    break;
+                default: 
+                    break;
+            }
         }
 
         private void SwitchPbs(PictureBox pb1, PictureBox pb2)
         {
-            paths.SwitchPbs(pb1.Name, pb2.Name);
-            tilePaths = paths.LoadTilePaths();
+            paths.SwitchTiles(pb1.Name, pb2.Name);
+            appPaths = paths.LoadAppPaths();
             ReloadImage(pb1);
             ReloadImage(pb2);
         }
 
         private void UpdatePb(PictureBox pb, string picturePath, string? applicationPath = null)
         {
-            if (applicationPath != null) paths.AddOrUpdateTilePath(pb.Name, picturePath, applicationPath);
-            else paths.UpdatePicturePath(pb.Name, picturePath);
-            tilePaths = paths.LoadTilePaths();
+            UpdatePb(pb, new Bitmap(picturePath), applicationPath);
+        }
+
+        private void UpdatePb(PictureBox pb, Bitmap pic, string? applicationPath = null)
+        {
+            if (applicationPath != null) paths.AddOrUpdateTile(pb.Name, pic, applicationPath);
+            else paths.SavePicture(pb.Name, pic);
+            appPaths = paths.LoadAppPaths();
             ReloadImage(pb);
         }
 
         private void ReloadImage(PictureBox pb)
         {
-            Paths.TilePaths? tp;
-            if (tilePaths.TryGetValue(pb.Name, out tp))
-            {
-                pb.ImageLocation = tp.PicturePath;
-            }
-            else MessageBox.Show("You need to set the path to an Application first!");
+            pb.Image = paths.LoadPicture(pb.Name);
         }
 
-        private bool GetFilename(out string filename, DragEventArgs e)
+
+        private void ProcessAppFile(PictureBox pb, string appPath)
         {
-            bool ret = false;
-            filename = String.Empty;
-            if ((e.AllowedEffect & DragDropEffects.Copy) == DragDropEffects.Copy)
+            try
             {
-                Array data = ((IDataObject)e.Data).GetData("FileDrop") as Array;
-                if (data != null)
+                string targetPath = Path.GetExtension(appPath).ToLower() switch
                 {
-                    if ((data.Length == 1) && (data.GetValue(0) is String))
-                    {
-                        filename = ((string[])data)[0];
-                        string ext = Path.GetExtension(filename).ToLower();
-                        if ((ext == ".jpg") || (ext == ".png") || (ext == ".bmp") || (ext == ".lnk") || (ext == ".exe"))
-                        {
-                            ret = true;
-                        }
-                    }
-                }
+                    ".exe" => appPath,
+                    ".lnk" => GetTargetPath(appPath),
+                    //".url" => GetUrl(appPath)
+                };
+
+                Icon? icon = Icon.ExtractAssociatedIcon(appPath);
+                if (icon == null) icon = Icon.ExtractAssociatedIcon(targetPath);
+                if (icon != null) UpdatePb(pb, icon.ToBitmap(), targetPath);
             }
-            return ret;
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Fehler beim Verarbeiten der LNK-Datei:\n{ex.Message}",
+                    "Fehler",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        private string GetTargetPath(string lnkPath)
+        {
+            WshShell shell = new WshShell();
+            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(lnkPath);
+            return shortcut.TargetPath;
         }
 
     }
