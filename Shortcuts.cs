@@ -1,12 +1,5 @@
-using IWshRuntimeLibrary;
-using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
+using static FileHandling;
 
 namespace Superb_Shortcuts
 {
@@ -25,7 +18,6 @@ namespace Superb_Shortcuts
 
         Paths paths;
         Dictionary<String, String> appPaths;
-
 
         public Shortcuts()
         {
@@ -69,16 +61,17 @@ namespace Superb_Shortcuts
             if (e.Button == MouseButtons.Left && e.Clicks == 1)
             {
                 PictureBox pb = sender as PictureBox;
-                pb.DoDragDrop(pb, DragDropEffects.Copy | DragDropEffects.Move);
+                pb.DoDragDrop(pb, DragDropEffects.Move);
             }
         }
+
 
         private void Pb_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(typeof(PictureBox)))
             {
                 dropType = DropType.PictureBox;
-                e.Effect = DragDropEffects.Copy;
+                e.Effect = DragDropEffects.Move;
             }
             else if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -96,12 +89,9 @@ namespace Superb_Shortcuts
                     if (dropType != DropType.Invalid) e.Effect = DragDropEffects.Copy;
                 }
             }
-            else
-            {
-                dropType = DropType.Invalid;
-                e.Effect = DragDropEffects.None;
-            }
+            else dropType = DropType.Invalid;
         }
+
 
         private void Pb_DragDrop(object sender, DragEventArgs e)
         {
@@ -120,6 +110,7 @@ namespace Superb_Shortcuts
                 default: 
                     break;
             }
+            dropType = DropType.Invalid;
         }
 
         private void SwitchPbs(PictureBox pb1, PictureBox pb2)
@@ -149,68 +140,11 @@ namespace Superb_Shortcuts
             pb.Image = paths.LoadPicture(pb.Name);
         }
 
-
-        private void ProcessAppFile(PictureBox pb, string appPath, string? picturePath = null)
+        private void ProcessAppFile(PictureBox pb, string dropFilepath, string? picturePath = null)
         {
-            try
-            {
-                string targetPath = Path.GetExtension(appPath).ToLower() switch
-                {
-                    ".exe" => appPath,
-                    ".lnk" => GetTargetPath(appPath),
-                    ".url" => GetUrl(appPath)
-                };
-
-                if (targetPath == "")
-                {
-                    MessageBox.Show(
-                        "This file isn't compatible",
-                        "Error",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error
-                    );
-                    return;
-                }
-
-                if (picturePath == null)
-                {
-                    Icon? icon = Icon.ExtractAssociatedIcon(appPath);
-                    if (icon == null) icon = Icon.ExtractAssociatedIcon(targetPath);
-                    if (icon != null) UpdatePb(pb, icon.ToBitmap(), targetPath);
-                }
-                else UpdatePb(pb, picturePath, targetPath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Fehler beim Verarbeiten der LNK-Datei:\n{ex.Message}",
-                    "Fehler",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-            }
-        }
-
-        private string GetTargetPath(string lnkPath)
-        {
-            WshShell shell = new WshShell();
-            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(lnkPath);
-            return shortcut.TargetPath;
-        }
-
-        private string GetUrl(string urlPath)
-        {
-            var lines = System.IO.File.ReadAllLines(urlPath);
-
-            foreach (var line in lines)
-            {
-                if (line.StartsWith("URL"))
-                {
-                    return line.Substring(4).Trim();
-                }
-            }
-
-            return null; // ToDo: Is this case possible? Maybe work with returning bool / out argument
+            Bitmap? pic;
+            string? appPath;
+            if (GetPicAndPath(out pic, out appPath, dropFilepath, picturePath)) UpdatePb(pb, pic, appPath);
         }
     }
 }
