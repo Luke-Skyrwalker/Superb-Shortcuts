@@ -1,11 +1,10 @@
 using System.Diagnostics;
-using static FileHandling;
 
 namespace Superb_Shortcuts
 {
     public partial class Shortcuts : Form
     {
-        enum DropType
+        public enum DropType
         {
             PictureBox,
             Picture,
@@ -14,7 +13,7 @@ namespace Superb_Shortcuts
         }
 
         DropType dropType = DropType.Invalid;
-        string dropFilepath;
+        string? dropFilepath;
 
         Paths paths;
         Dictionary<String, String> appPaths;
@@ -95,19 +94,8 @@ namespace Superb_Shortcuts
             }
             else if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1)
-                {
-                    dropFilepath = files[0];
-                    string ext = Path.GetExtension(files[0]).ToLower();
-                    dropType = ext switch
-                    {
-                        ".jpg" or ".jpeg" or ".png" or ".bmp" => DropType.Picture,
-                        ".lnk" or ".exe" or ".url" => DropType.App,
-                        _ => DropType.Invalid
-                    };
-                    if (dropType != DropType.Invalid) e.Effect = DragDropEffects.Copy;
-                }
+                dropType = FileHandling.GetDropTypeAndPath(e, out dropFilepath);
+                if (dropType != DropType.Invalid) e.Effect = DragDropEffects.Copy;
             }
             else dropType = DropType.Invalid;
         }
@@ -184,7 +172,7 @@ namespace Superb_Shortcuts
         {
             Bitmap? pic;
             string? appPath;
-            if (GetPicAndPath(out pic, out appPath, dropFilepath, picturePath)) UpdatePb(pb, pic, appPath);
+            if (FileHandling.GetPicAndPath(out pic, out appPath, dropFilepath, picturePath)) UpdatePb(pb, pic, appPath);
         }
 
         private void StartupAnimationTimer_Tick(object sender, EventArgs e)
