@@ -19,11 +19,21 @@ namespace Superb_Shortcuts
         Paths paths;
         Dictionary<String, String> appPaths;
 
+        int startupCounter = 0;
+        PictureBox[] startupSequence;
+
+
         public Shortcuts()
         {
             paths = new Paths();
             appPaths = paths.LoadAppPaths();
             InitializeComponents(paths);
+            foreach (PictureBox pb in tiles)
+            {
+                pb.Visible = false;
+            }
+            startupSequence = [A0, A1, A2, A5, A4, A3, A6, A7, A8];
+            StartupAnimationTimer.Start();
         }
 
         private void Pb_DoubleClick(object sender, EventArgs e)
@@ -65,6 +75,16 @@ namespace Superb_Shortcuts
             }
         }
 
+        private void Pb_MouseEnter(object sender, EventArgs e)
+        {
+            SelectPb(sender as PictureBox);
+        }
+
+        private void Pb_MouseLeave(object sender, EventArgs e)
+        {
+            UnselectPb(sender as PictureBox);
+        }
+
 
         private void Pb_DragEnter(object sender, DragEventArgs e)
         {
@@ -96,7 +116,7 @@ namespace Superb_Shortcuts
         private void Pb_DragDrop(object sender, DragEventArgs e)
         {
             PictureBox pb = sender as PictureBox;
-            switch (dropType) 
+            switch (dropType)
             {
                 case DropType.PictureBox:
                     SwitchPbs(pb, e.Data.GetData(typeof(PictureBox)) as PictureBox);
@@ -107,10 +127,30 @@ namespace Superb_Shortcuts
                 case DropType.App:
                     ProcessAppFile(pb, dropFilepath);
                     break;
-                default: 
+                default:
                     break;
             }
             dropType = DropType.Invalid;
+        }
+
+        private void SelectPb(PictureBox pb)
+        {
+            SuspendLayout();
+            pb.Width = pb.Width + selDifWidth;
+            pb.Height = pb.Height + selDifHeight;
+            pb.Left = pb.Left - selDifWidth / 2;
+            pb.Top = pb.Top - selDifHeight / 2;
+            ResumeLayout(false);
+        }
+
+        private void UnselectPb(PictureBox pb)
+        {
+            SuspendLayout();
+            pb.Width = pb.Width - selDifWidth;
+            pb.Height = pb.Height - selDifHeight;
+            pb.Left = pb.Left + selDifWidth / 2;
+            pb.Top = pb.Top + selDifHeight / 2;
+            ResumeLayout(false);
         }
 
         private void SwitchPbs(PictureBox pb1, PictureBox pb2)
@@ -145,6 +185,29 @@ namespace Superb_Shortcuts
             Bitmap? pic;
             string? appPath;
             if (GetPicAndPath(out pic, out appPath, dropFilepath, picturePath)) UpdatePb(pb, pic, appPath);
+        }
+
+        private void StartupAnimationTimer_Tick(object sender, EventArgs e)
+        {
+            int startupLength = startupSequence.Length;
+            if (startupCounter < startupLength) startupSequence[startupCounter].Visible = true;
+            else if (startupCounter < startupLength + 4)
+            {
+                if (startupCounter < startupLength + 3) 
+                { 
+                    SelectPb(startupSequence[startupCounter % 9]);
+                    SelectPb(startupSequence[5 - startupCounter % 9]);
+                    SelectPb(startupSequence[startupCounter % 9 + 6]);
+                }
+                if (startupCounter > startupLength + 1)
+                {
+                    UnselectPb(startupSequence[startupCounter % 9 - 1]);
+                    UnselectPb(startupSequence[6 - startupCounter % 9]);
+                    UnselectPb(startupSequence[startupCounter % 9 + 5]);
+                }
+            }
+            else StartupAnimationTimer.Stop();
+            startupCounter += 1;
         }
     }
 }

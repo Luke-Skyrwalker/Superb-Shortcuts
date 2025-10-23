@@ -1,3 +1,5 @@
 - add controller support
 - control SoundSwitch via CLI -> Check SoundSwitch C# project (adding new overlay for sound/display switch?)
+- Refactorings?
+- Reasure/Test AutoScale/Resize
 - tutorial at first start

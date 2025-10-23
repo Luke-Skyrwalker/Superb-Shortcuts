@@ -30,8 +30,10 @@ namespace Superb_Shortcuts
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             PictureDialog = new OpenFileDialog();
             ApplicationDialog = new OpenFileDialog();
+            StartupAnimationTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
             // PictureDialog
@@ -43,6 +45,11 @@ namespace Superb_Shortcuts
             // 
             ApplicationDialog.Filter = "Applications | *.exe; *.lnk; *.url";
             ApplicationDialog.Title = "Choose Application";
+            // 
+            // StartupAnimationTimer
+            // 
+            StartupAnimationTimer.Interval = 200;
+            StartupAnimationTimer.Tick += StartupAnimationTimer_Tick;
             // 
             // Shortcuts
             // 
@@ -73,17 +80,18 @@ namespace Superb_Shortcuts
             Size = new Size(Screen.PrimaryScreen.Bounds.Width / 3, Screen.PrimaryScreen.Bounds.Height / 3);
             Top = (int)Math.Ceiling(0.01 * Size.Height);
             Left = Screen.PrimaryScreen.Bounds.Width - Size.Width - (int)Math.Ceiling(0.01 * Size.Width);
+            selDifWidth = (int)(Size.Width * 0.02);
+            selDifHeight = (int)(Size.Height * 0.02);
         }
 
         private void InitializePictureBoxes(Paths paths)
         {
             SuspendLayout();
-            tiles = new PictureBox[] { A0, A1, A2, A3, A4, A5, A6, A7, A8 };
+            tiles = [A0, A3, A6, A1, A4, A7, A2, A5, A8];
             positions = InitializePositions();
             for (int i = 0; i < tiles.Length; i++)
             {
-                PictureBox pb = new PictureBox();
-                tiles[i] = pb;
+                PictureBox pb = tiles[i];
                 ((System.ComponentModel.ISupportInitialize)pb).BeginInit();
 
                 // Properties
@@ -101,6 +109,8 @@ namespace Superb_Shortcuts
                 pb.DoubleClick += new EventHandler(Pb_DoubleClick);
                 pb.MouseClick += new MouseEventHandler(Pb_Click);
                 pb.MouseDown += new MouseEventHandler(Pb_MouseDown);
+                pb.MouseEnter += new EventHandler(Pb_MouseEnter);
+                pb.MouseLeave += new EventHandler(Pb_MouseLeave);
                 pb.DragDrop += new DragEventHandler(Pb_DragDrop);
                 pb.DragEnter += new DragEventHandler(Pb_DragEnter);
                 // pb.MouseLeave += new EventHandler(Pb_MouseLeave);
@@ -140,17 +150,20 @@ namespace Superb_Shortcuts
 
         // ToDo: positions als Array vom Typ Point?
         int[,] positions;
-        private PictureBox A0;
-        private PictureBox A1;
-        private PictureBox A2;
-        private PictureBox A3;
-        private PictureBox A4;
-        private PictureBox A5;
-        private PictureBox A6;
-        private PictureBox A7;
-        private PictureBox A8;
+        int selDifWidth;
+        int selDifHeight;
+        PictureBox A0 = new PictureBox();
+        PictureBox A1 = new PictureBox();
+        PictureBox A2 = new PictureBox();
+        PictureBox A3 = new PictureBox();
+        PictureBox A4 = new PictureBox();
+        PictureBox A5 = new PictureBox();
+        PictureBox A6 = new PictureBox();
+        PictureBox A7 = new PictureBox();
+        PictureBox A8 = new PictureBox();
         PictureBox[] tiles;
         OpenFileDialog PictureDialog;
         OpenFileDialog ApplicationDialog;
+        private System.Windows.Forms.Timer StartupAnimationTimer;
     }
 }
