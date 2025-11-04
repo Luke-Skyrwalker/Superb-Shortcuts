@@ -87,7 +87,7 @@ namespace Superb_Shortcuts
         private void InitializePictureBoxes(Paths paths)
         {
             SuspendLayout();
-            tiles = [A0, A3, A6, A1, A4, A7, A2, A5, A8];
+            tiles = [A0, A1, A2, A3, A4, A5, A6, A7, A8];
             positions = InitializePositions();
             for (int i = 0; i < tiles.Length; i++)
             {
@@ -129,20 +129,20 @@ namespace Superb_Shortcuts
             // ToDo: positions "automatisch" befüllen?
             positions[0, 0] = 19;
             positions[0, 1] = 14;
-            positions[1, 0] = 19;
-            positions[1, 1] = 421;
-            positions[2, 0] = 19;
-            positions[2, 1] = 840;
-            positions[3, 0] = 779;
-            positions[3, 1] = 14;
+            positions[1, 0] = 779;
+            positions[1, 1] = 14;
+            positions[2, 0] = 1536;
+            positions[2, 1] = 14;
+            positions[3, 0] = 19;
+            positions[3, 1] = 421;
             positions[4, 0] = 779;
             positions[4, 1] = 421;
-            positions[5, 0] = 779;
-            positions[5, 1] = 840;
-            positions[6, 0] = 1536;
-            positions[6, 1] = 14;
-            positions[7, 0] = 1536;
-            positions[7, 1] = 421;
+            positions[5, 0] = 1536;
+            positions[5, 1] = 421;
+            positions[6, 0] = 19;
+            positions[6, 1] = 840;
+            positions[7, 0] = 779;
+            positions[7, 1] = 840;
             positions[8, 0] = 1536;
             positions[8, 1] = 840;
             return positions;

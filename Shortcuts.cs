@@ -183,15 +183,15 @@ namespace Superb_Shortcuts
             {
                 if (startupCounter < startupLength + 3) 
                 { 
-                    SelectPb(startupSequence[startupCounter % 9]);
-                    SelectPb(startupSequence[5 - startupCounter % 9]);
-                    SelectPb(startupSequence[startupCounter % 9 + 6]);
+                    SelectPb(tiles[startupCounter % 9]);
+                    SelectPb(tiles[startupCounter % 9 + 3]);
+                    SelectPb(tiles[startupCounter % 9 + 6]);
                 }
-                if (startupCounter > startupLength + 1)
+                if (startupCounter > startupLength)
                 {
-                    UnselectPb(startupSequence[startupCounter % 9 - 1]);
-                    UnselectPb(startupSequence[6 - startupCounter % 9]);
-                    UnselectPb(startupSequence[startupCounter % 9 + 5]);
+                    UnselectPb(tiles[startupCounter % 9 - 1]);
+                    UnselectPb(tiles[startupCounter % 9 + 2]);
+                    UnselectPb(tiles[startupCounter % 9 + 5]);
                 }
             }
             else StartupAnimationTimer.Stop();
