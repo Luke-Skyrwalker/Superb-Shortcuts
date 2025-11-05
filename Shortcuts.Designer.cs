@@ -34,6 +34,7 @@ namespace Superb_Shortcuts
             PictureDialog = new OpenFileDialog();
             ApplicationDialog = new OpenFileDialog();
             StartupAnimationTimer = new System.Windows.Forms.Timer(components);
+            controllerTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
             // PictureDialog
@@ -50,6 +51,10 @@ namespace Superb_Shortcuts
             // 
             StartupAnimationTimer.Interval = 200;
             StartupAnimationTimer.Tick += StartupAnimationTimer_Tick;
+            // 
+            // controllerTimer
+            // 
+            controllerTimer.Interval = 50;
             // 
             // Shortcuts
             // 
@@ -165,5 +170,6 @@ namespace Superb_Shortcuts
         OpenFileDialog PictureDialog;
         OpenFileDialog ApplicationDialog;
         private System.Windows.Forms.Timer StartupAnimationTimer;
+        private System.Windows.Forms.Timer controllerTimer;
     }
 }

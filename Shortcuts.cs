@@ -33,22 +33,17 @@ namespace Superb_Shortcuts
             }
             startupSequence = [A0, A1, A2, A5, A4, A3, A6, A7, A8];
             StartupAnimationTimer.Start();
+
+            ControllerHandler controller = new ControllerHandler();
+            controller.OnMove += MoveSelection;
+            controller.OnSelect += StartApp;
+            controllerTimer.Tick += (s, e) => controller.Update();
+            controllerTimer.Start();
         }
 
         private void Pb_DoubleClick(object sender, EventArgs e)
         {
-            PictureBox pb = sender as PictureBox;
-
-            string? ap;
-            if (appPaths.TryGetValue(pb.Name, out ap))
-            {
-                using (Process myProcess = new Process())
-                {
-                    myProcess.StartInfo.UseShellExecute = true;
-                    myProcess.StartInfo.FileName = ap;
-                    myProcess.Start();
-                }
-            }
+            StartApp(sender as PictureBox);
         }
 
         private void Pb_Click(object sender, MouseEventArgs e)
@@ -121,8 +116,41 @@ namespace Superb_Shortcuts
             dropType = DropType.Invalid;
         }
 
+        private void StartApp()
+        {
+            if (selectedIndex != null)
+            {
+                StartApp(tiles[(int)selectedIndex]);
+            }
+        }
+
+        private void StartApp(PictureBox pb)
+        {
+            string? ap;
+            if (appPaths.TryGetValue(pb.Name, out ap))
+            {
+                using (Process myProcess = new Process())
+                {
+                    myProcess.StartInfo.UseShellExecute = true;
+                    myProcess.StartInfo.FileName = ap;
+                    myProcess.Start();
+                }
+            }
+        }
+
+        private void MoveSelection(int moveDir)
+        {
+            if (selectedIndex == null) selectedIndex = 4;
+            int newIndex = (int)selectedIndex + moveDir;
+            if (newIndex < 0 || newIndex >= tiles.Length) return;
+            UnselectPb(tiles[(int)selectedIndex]);
+            SelectPb(tiles[newIndex]);
+        }
+
         private void SelectPb(PictureBox pb)
         {
+            if (selectedIndex != null) UnselectPb(tiles[(int)selectedIndex]);
+            selectedIndex = pb.Name[1] - '0';
             SuspendLayout();
             pb.Width = pb.Width + selDifWidth;
             pb.Height = pb.Height + selDifHeight;
@@ -133,6 +161,7 @@ namespace Superb_Shortcuts
 
         private void UnselectPb(PictureBox pb)
         {
+            selectedIndex = null;
             SuspendLayout();
             pb.Width = pb.Width - selDifWidth;
             pb.Height = pb.Height - selDifHeight;
