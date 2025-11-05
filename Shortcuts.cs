@@ -16,10 +16,15 @@ namespace Superb_Shortcuts
         string? dropFilepath;
 
         Paths paths;
+        // ToDo: Dictionary overkill here?
         Dictionary<String, String> appPaths;
 
         int startupCounter = 0;
         PictureBox[] startupSequence;
+
+        int? selectedIndex;        
+        int pbMinWidth;
+        int pbMaxWidth;
 
 
         public Shortcuts()
@@ -27,6 +32,10 @@ namespace Superb_Shortcuts
             paths = new Paths();
             appPaths = paths.LoadAppPaths();
             InitializeComponents(paths);
+
+            pbMinWidth = A0.Width;
+            pbMaxWidth = A0.Width + selDifWidth;
+
             foreach (PictureBox pb in tiles)
             {
                 pb.Visible = false;
@@ -150,9 +159,10 @@ namespace Superb_Shortcuts
         private void SelectPb(PictureBox pb)
         {
             if (selectedIndex != null) UnselectPb(tiles[(int)selectedIndex]);
+            if (pb.Width == pbMaxWidth) return;
             selectedIndex = pb.Name[1] - '0';
             SuspendLayout();
-            pb.Width = pb.Width + selDifWidth;
+            pb.Width = pbMaxWidth;
             pb.Height = pb.Height + selDifHeight;
             pb.Left = pb.Left - selDifWidth / 2;
             pb.Top = pb.Top - selDifHeight / 2;
@@ -161,9 +171,10 @@ namespace Superb_Shortcuts
 
         private void UnselectPb(PictureBox pb)
         {
+            if (pb.Width == pbMinWidth) return;
             selectedIndex = null;
             SuspendLayout();
-            pb.Width = pb.Width - selDifWidth;
+            pb.Width = pbMinWidth;
             pb.Height = pb.Height - selDifHeight;
             pb.Left = pb.Left + selDifWidth / 2;
             pb.Top = pb.Top + selDifHeight / 2;
@@ -210,11 +221,14 @@ namespace Superb_Shortcuts
             if (startupCounter < startupLength) startupSequence[startupCounter].Visible = true;
             else if (startupCounter < startupLength + 4)
             {
-                if (startupCounter < startupLength + 3) 
-                { 
+                if (startupCounter < startupLength + 3)
+                {
                     SelectPb(tiles[startupCounter % 9]);
+                    selectedIndex = null;
                     SelectPb(tiles[startupCounter % 9 + 3]);
+                    selectedIndex = null;
                     SelectPb(tiles[startupCounter % 9 + 6]);
+                    selectedIndex = null;
                 }
                 if (startupCounter > startupLength)
                 {
