@@ -43,10 +43,8 @@ namespace Superb_Shortcuts
             startupSequence = [A0, A1, A2, A5, A4, A3, A6, A7, A8];
             StartupAnimationTimer.Start();
 
-            ControllerHandler controller = new ControllerHandler();
-            controller.OnMove += MoveSelection;
-            controller.OnSelect += StartApp;
-            controllerTimer.Tick += (s, e) => controller.Update();
+            ControllerHandler controller = new ControllerHandler(MoveSelection, StartApp);
+            controllerTimer.Tick += (s, e) => controller.Update(Form.ActiveForm != this);
             controllerTimer.Start();
         }
 

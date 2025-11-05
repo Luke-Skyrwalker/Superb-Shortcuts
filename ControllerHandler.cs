@@ -5,30 +5,28 @@ using System.Diagnostics;
 public class ControllerHandler
 {
     private Controller controller;
-    private bool isConnected;
 
-    private Stopwatch moveCooldown = new Stopwatch();
-    private int moveCooldownMs = 180;
+    private Stopwatch inputCooldown = new Stopwatch();
+    private int inputCooldownMin = 180;
 
     public event Action<int> OnMove;
     public event Action OnSelect;
 
-    public ControllerHandler()
+    public ControllerHandler(Action<int> OnMove, Action OnSelect)
     {
         controller = new Controller(UserIndex.One);
-        isConnected = controller.IsConnected;
-        moveCooldown.Start();
+        this.OnMove = OnMove;
+        this.OnSelect = OnSelect;
+        inputCooldown.Start();
     }
 
-    public void Update()
+    public void Update(bool activeForm)
     {
-        if (!isConnected) return;
-
         Gamepad gamepad = controller.GetState().Gamepad;
 
-        if (moveCooldown.ElapsedMilliseconds > moveCooldownMs)
+        if (inputCooldown.ElapsedMilliseconds > inputCooldownMin)
         {
-
+            if (!activeForm) return;
             int moveDir = 0;
 
             if (gamepad.LeftThumbX > 12000) moveDir = 1;  // Right
@@ -43,13 +41,13 @@ public class ControllerHandler
             if (moveDir != 0)
             {
                 OnMove?.Invoke(moveDir);
-                moveCooldown.Restart();
+                inputCooldown.Restart();
             }
 
             if ((gamepad.Buttons & GamepadButtonFlags.A) != 0)
             {
                 OnSelect?.Invoke();
-                moveCooldown.Restart();
+                inputCooldown.Restart();
             }
         }
     }
