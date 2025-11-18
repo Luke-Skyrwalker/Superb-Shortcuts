@@ -43,6 +43,7 @@ namespace Superb_Shortcuts
             paths = new Paths();
             appPaths = paths.LoadAppPaths();
             InitializeComponents(paths);
+            RegisterInStartup();
 
             pbMinWidth = A0.Width;
             pbMaxWidth = A0.Width + selDifWidth;
@@ -283,6 +284,13 @@ namespace Superb_Shortcuts
             }
             else StartupAnimationTimer.Stop();
             startupCounter += 1;
+        }
+
+        private void RegisterInStartup()
+        {
+            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey
+                    ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            registryKey.SetValue("SuperbShortcuts", Application.ExecutablePath);
         }
     }
 }
