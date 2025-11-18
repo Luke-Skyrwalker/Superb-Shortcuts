@@ -3,3 +3,4 @@
 - Refactorings?
 - Reasure/Test AutoScale/Resize
 - tutorial at first start
+- check dependencies (XInput) and check if they can be bundled or so

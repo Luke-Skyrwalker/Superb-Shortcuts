@@ -1,9 +1,20 @@
+using Microsoft.Win32;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Superb_Shortcuts
 {
     public partial class Shortcuts : Form
     {
+        [DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
+
+        private const byte VK_LWIN = 0x5B;  // Left Windows-Key
+        private const byte M = 0x4D;        // M-Key
+        private const byte VK_TAB = 0x09;   // Tab-Key
+        private const byte VK_RETURN = 0x0D;// Enter
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+
         public enum DropType
         {
             PictureBox,
@@ -43,8 +54,8 @@ namespace Superb_Shortcuts
             startupSequence = [A0, A1, A2, A5, A4, A3, A6, A7, A8];
             StartupAnimationTimer.Start();
 
-            ControllerHandler controller = new ControllerHandler(MoveSelection, StartApp);
-            controllerTimer.Tick += (s, e) => controller.Update(Form.ActiveForm != this);
+            ControllerHandler controller = new ControllerHandler(MoveSelection, StartApp, HomeButtonPressed);
+            controllerTimer.Tick += (s, e) => controller.Update(Form.ActiveForm == this);
             controllerTimer.Start();
         }
 
@@ -153,6 +164,41 @@ namespace Superb_Shortcuts
             UnselectPb(tiles[(int)selectedIndex]);
             SelectPb(tiles[newIndex]);
         }
+
+        private void HomeButtonPressed(int times)
+        {
+            if (times <= 2)
+            {
+                MinimizeWindows();
+
+                using (Process myProcess = new Process())
+                {
+                    myProcess.StartInfo.UseShellExecute = true;
+                    myProcess.StartInfo.FileName = "SoundSwitch.CLI.exe";
+                    if (times == 1) myProcess.StartInfo.Arguments = "profile --name \"Sofa\"";
+                    else myProcess.StartInfo.Arguments = "profile --name \"Headset\"";
+                    myProcess.Start();
+                }
+
+                using (Process myProcess = new Process())
+                {
+                    myProcess.StartInfo.UseShellExecute = true;
+                    myProcess.StartInfo.FileName = "DisplaySwitch";
+                    myProcess.StartInfo.Arguments = "/internal";
+                    myProcess.Start();
+                }
+                // this.Show();
+            }
+        }
+
+        private void MinimizeWindows()
+        {
+            keybd_event(VK_LWIN, 0, 0, IntPtr.Zero);
+            keybd_event(M, 0, 0, IntPtr.Zero);
+            keybd_event(M, 0, KEYEVENTF_KEYUP, IntPtr.Zero);
+            keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, IntPtr.Zero);
+        }
+
 
         private void SelectPb(PictureBox pb)
         {
