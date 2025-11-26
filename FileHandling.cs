@@ -38,10 +38,11 @@ namespace Superb_Shortcuts
                 {
                     ".exe" => appPath,
                     ".lnk" => GetTargetPath(appPath),
-                    ".url" => GetUrl(appPath)
+                    ".url" => GetUrl(appPath),
+                    _ => null
                 };
 
-                if (targetPath == "")
+                if (targetPath == null)
                 {
                     MessageBox.Show(
                         "This file isn't compatible",
@@ -59,6 +60,7 @@ namespace Superb_Shortcuts
                     if (icon != null) pic = icon.ToBitmap();
                 }
                 else pic = new Bitmap(picturePath);
+                return true;
             }
             catch (Exception ex)
             {
