@@ -85,8 +85,8 @@ namespace Superb_Shortcuts
             Size = new Size(Screen.PrimaryScreen.Bounds.Width / 3, Screen.PrimaryScreen.Bounds.Height / 3);
             Top = (int)Math.Ceiling(0.01 * Size.Height);
             Left = Screen.PrimaryScreen.Bounds.Width - Size.Width - (int)Math.Ceiling(0.01 * Size.Width);
-            selDifWidth = (int)(Size.Width * 0.02);
-            selDifHeight = (int)(Size.Height * 0.02);
+            selDifWidth = (int)(Size.Width * 0.01);
+            selDifHeight = (int)(Size.Height * 0.01);
         }
 
         private void InitializePictureBoxes(Paths paths)
