@@ -34,8 +34,6 @@ namespace Superb_Shortcuts
         PictureBox[] startupSequence;
 
         int? selectedIndex;        
-        int pbMinWidth;
-        int pbMaxWidth;
 
 
         public Shortcuts()
@@ -44,9 +42,6 @@ namespace Superb_Shortcuts
             appPaths = paths.LoadAppPaths();
             InitializeComponents(paths);
             RegisterInStartup();
-
-            pbMinWidth = A0.Width;
-            pbMaxWidth = A0.Width + selDifWidth;
 
             foreach (PictureBox pb in tiles)
             {

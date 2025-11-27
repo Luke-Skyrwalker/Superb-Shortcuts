@@ -60,10 +60,8 @@ namespace Superb_Shortcuts
             // 
             AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            AutoSize = true;
+            ClientSize = new Size(640, 360);
             BackColor = Color.White;
-            ClientSize = new Size(1940, 1100);
             FormBorderStyle = FormBorderStyle.None;
             Margin = new Padding(1);
             Name = "Shortcuts";
@@ -79,30 +77,21 @@ namespace Superb_Shortcuts
 
         private void InitializeComponents(Paths paths)
         {
-            InitializePictureBoxes(paths);
             InitializeComponent();
-            AutoScaleDimensions = new SizeF(19F, 37F);
-            Size = new Size(Screen.PrimaryScreen.Bounds.Width / 3, Screen.PrimaryScreen.Bounds.Height / 3);
-            Top = (int)Math.Ceiling(0.01 * Size.Height);
-            Left = Screen.PrimaryScreen.Bounds.Width - Size.Width - (int)Math.Ceiling(0.01 * Size.Width);
-            selDifWidth = (int)(Size.Width * 0.01);
-            selDifHeight = (int)(Size.Height * 0.01);
+            InitializePictureBoxes(paths);
+            ScaleAndPositionWindow();
         }
 
         private void InitializePictureBoxes(Paths paths)
         {
             SuspendLayout();
             tiles = [A0, A1, A2, A3, A4, A5, A6, A7, A8];
-            positions = InitializePositions();
             for (int i = 0; i < tiles.Length; i++)
             {
                 PictureBox pb = tiles[i];
                 ((System.ComponentModel.ISupportInitialize)pb).BeginInit();
 
                 // Properties
-                pb.Location = new Point(positions[i, 0], positions[i, 1]);
-                pb.Margin = new Padding(10, 9, 10, 9);
-                pb.Size = new Size(713, 370);
                 pb.SizeMode = PictureBoxSizeMode.Zoom;
                 pb.Name = "A" + i.ToString();
                 pb.Image = paths.LoadPicture(pb.Name);
@@ -131,32 +120,45 @@ namespace Superb_Shortcuts
         private int[,] InitializePositions()
         {
             int[,] positions = new int[9, 2];
-            // ToDo: positions "automatisch" befüllen?
-            positions[0, 0] = 19;
-            positions[0, 1] = 14;
-            positions[1, 0] = 779;
-            positions[1, 1] = 14;
-            positions[2, 0] = 1536;
-            positions[2, 1] = 14;
-            positions[3, 0] = 19;
-            positions[3, 1] = 421;
-            positions[4, 0] = 779;
-            positions[4, 1] = 421;
-            positions[5, 0] = 1536;
-            positions[5, 1] = 421;
-            positions[6, 0] = 19;
-            positions[6, 1] = 840;
-            positions[7, 0] = 779;
-            positions[7, 1] = 840;
-            positions[8, 0] = 1536;
-            positions[8, 1] = 840;
+            int leftMargin = (int)Math.Ceiling(0.01 * Size.Width); // ToDo: alt name "widthMargin"?
+            int topMargin = (int)Math.Ceiling(0.01 * Size.Height);// ToDo: alt name "heightMargin"?
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                positions[i, 0] = leftMargin + Size.Width * (i % 3) / 3;
+                positions[i, 1] = topMargin + Size.Height * ((i / 3) % 3) / 3;
+            }
             return positions;
+        }
+
+        private void ScaleAndPositionWindow() // ToDo: alt name PositionAndScaleEverything?
+        {
+            SuspendLayout();
+            Size = new Size((int)(Screen.PrimaryScreen.WorkingArea.Width / 2.5), (int)(Screen.PrimaryScreen.WorkingArea.Height / 2.5));
+            Top = (int)Math.Ceiling(0.02 * Size.Height);
+            Left = Screen.PrimaryScreen.WorkingArea.Width - Size.Width - Top;
+
+            selDifWidth = (int)(Size.Width * 0.015);
+            selDifHeight = (int)(Size.Height * 0.015);
+
+            positions = InitializePositions();
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                PictureBox pb = tiles[i];
+                pb.Size = new Size(Size.Width / 3 - (int)Math.Ceiling(0.01 * Size.Width) * 3, Size.Height / 3 - (int)Math.Ceiling(0.01 * Size.Height) * 3);
+                pb.Location = new Point(positions[i, 0], positions[i, 1]);
+            }
+
+            pbMinWidth = A0.Width;
+            pbMaxWidth = A0.Width + selDifWidth;
+            ResumeLayout(false);
         }
 
         // ToDo: positions als Array vom Typ Point?
         int[,] positions;
         int selDifWidth;
         int selDifHeight;
+        int pbMinWidth;
+        int pbMaxWidth;
         PictureBox A0 = new PictureBox();
         PictureBox A1 = new PictureBox();
         PictureBox A2 = new PictureBox();
